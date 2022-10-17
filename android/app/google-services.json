@@ -1,41 +1,43 @@
 {
   "project_info": {
-    "project_number": "585119731880",
-    "project_id": "instagram-clone-4cea4",
-    "storage_bucket": "instagram-clone-4cea4.appspot.com"
+    "project_number": "922084839257",
+    "firebase_url": "https://instagramclone-9461c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "instagramclone-9461c",
+    "storage_bucket": "instagramclone-9461c.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:585119731880:android:5fa7f4f052b09dccee329d",
+        "mobilesdk_app_id": "1:922084839257:android:72d7d4dbd2c8e80eb20648",
         "android_client_info": {
-          "package_name": "com.example.instagram_clone_flutter"
+          "package_name": "com.appmantra.instagram_clone_flutter"
         }
       },
       "oauth_client": [
         {
-          "client_id": "585119731880-fbokpi6g8o08s77nqoqeq2indt82t4v3.apps.googleusercontent.com",
+          "client_id": "922084839257-h99bcj0785201o1nhhg6l1lo2k0n24vm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appmantra.instagram_clone_flutter",
+            "certificate_hash": "ff0584b65c17b1384c22d2cc549555c3abbba9aa"
+          }
+        },
+        {
+          "client_id": "922084839257-223ls5cfvgctr56kcu166fgv35gag4cb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAM-GM_ijlA4phTqPYPIcuIzh171Llbqjs"
+          "current_key": "AIzaSyAR4ATDhWXvF0dxm9pDaJSGrMwONPxVOos"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "585119731880-fbokpi6g8o08s77nqoqeq2indt82t4v3.apps.googleusercontent.com",
+              "client_id": "922084839257-223ls5cfvgctr56kcu166fgv35gag4cb.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "585119731880-6raijggsm5b3pvqd9p5q858v1injcssn.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.instagramCloneFlutter"
-              }
             }
           ]
         }

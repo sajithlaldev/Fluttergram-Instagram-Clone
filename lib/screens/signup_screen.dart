@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,7 +10,6 @@ import 'package:instagram_clone_flutter/responsive/responsive_layout.dart';
 import 'package:instagram_clone_flutter/responsive/web_screen_layout.dart';
 import 'package:instagram_clone_flutter/screens/login_screen.dart';
 import 'package:instagram_clone_flutter/utils/colors.dart';
-import 'package:instagram_clone_flutter/utils/global_variable.dart';
 import 'package:instagram_clone_flutter/utils/utils.dart';
 import 'package:instagram_clone_flutter/widgets/text_field_input.dart';
 
@@ -22,6 +23,9 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   bool _isLoading = false;
@@ -35,6 +39,40 @@ class _SignupScreenState extends State<SignupScreen> {
     _usernameController.dispose();
   }
 
+  Future<bool?> otpVerfication(String otp) async {
+    if (kIsWeb) {
+      if (confirmationResult != null) {
+        try {
+          await confirmationResult!.confirm(otp);
+          return true;
+        } catch (e) {
+          showSnackBar(context, e.toString());
+        }
+      } else {
+        showSnackBar(context, "Please verify phone");
+      }
+    } else {
+      if (verificationId != null) {
+        try {
+          // Create a PhoneAuthCredential with the code
+          PhoneAuthCredential credential = PhoneAuthProvider.credential(
+            verificationId: verificationId!,
+            smsCode: otp,
+          );
+
+          // Sign the user in (or link) with the credential
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          return true;
+        } catch (e) {
+          showSnackBar(context, e.toString());
+        }
+      } else {
+        showSnackBar(context, "Please verify phone");
+      }
+    }
+    return null;
+  }
+
   void signUpUser() async {
     // set loading to true
     setState(() {
@@ -42,32 +80,41 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     // signup user using our authmethodds
-    String res = await AuthMethods().signUpUser(
+
+    if (await otpVerfication(_otpController.text.trim()) == true) {
+      print("Otp verification success");
+      String res = await AuthMethods().signUpUser(
         email: _emailController.text,
         password: _passwordController.text,
         username: _usernameController.text,
         bio: _bioController.text,
-        file: _image!);
-    // if string returned is sucess, user has been created
-    if (res == "success") {
-      setState(() {
-        _isLoading = false;
-      });
-      // navigate to the home screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const ResponsiveLayout(
-            mobileScreenLayout: MobileScreenLayout(),
-            webScreenLayout: WebScreenLayout(),
-          ),
-        ),
+        file: _image,
       );
+      // if string returned is sucess, user has been created
+      if (res == "success") {
+        setState(() {
+          _isLoading = false;
+        });
+        // navigate to the home screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const ResponsiveLayout(
+              mobileScreenLayout: MobileScreenLayout(),
+              webScreenLayout: WebScreenLayout(),
+            ),
+          ),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        // show the error
+        showSnackBar(context, res);
+      }
     } else {
       setState(() {
         _isLoading = false;
       });
-      // show the error
-      showSnackBar(context, res);
     }
   }
 
@@ -77,6 +124,40 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() {
       _image = im;
     });
+  }
+
+  ValueNotifier<bool> isCodeSent = ValueNotifier(false);
+  ConfirmationResult? confirmationResult;
+  String? verificationId;
+
+  verifyPhone(String phone) async {
+    var phone = _phoneController.text.trim();
+    if (phone.isNotEmpty && phone.length == 10) {
+      if (kIsWeb) {
+        confirmationResult =
+            await FirebaseAuth.instance.signInWithPhoneNumber('+91 $phone');
+        isCodeSent.value = true;
+      } else {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: '+91 $phone',
+          codeSent: (String verificationId, int? resendToken) async {
+            isCodeSent.value = true;
+            verificationId = verificationId;
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {},
+          verificationCompleted: (PhoneAuthCredential phoneAuthCredential) {},
+          verificationFailed: (FirebaseAuthException error) {},
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Enter valid phone number!",
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -97,10 +178,10 @@ class _SignupScreenState extends State<SignupScreen> {
               SvgPicture.asset(
                 'assets/ic_instagram.svg',
                 color: primaryColor,
-                height: 64,
+                height: 32,
               ),
               const SizedBox(
-                height: 64,
+                height: 32,
               ),
               Stack(
                 children: [
@@ -113,7 +194,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       : const CircleAvatar(
                           radius: 64,
                           backgroundImage: NetworkImage(
-                              'https://i.stack.imgur.com/l60Hf.png'),
+                              'https://bugreader.com/i/avatar.jpg'),
                           backgroundColor: Colors.red,
                         ),
                   Positioned(
@@ -133,6 +214,59 @@ class _SignupScreenState extends State<SignupScreen> {
                 hintText: 'Enter your username',
                 textInputType: TextInputType.text,
                 textEditingController: _usernameController,
+              ),
+              const SizedBox(
+                height: 24,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextFieldInput(
+                      hintText: 'Enter your phone',
+                      textInputType: TextInputType.phone,
+                      textEditingController: _phoneController,
+                      maxLength: 10,
+                      suffix: InkWell(
+                        onTap: () {
+                          verifyPhone(_phoneController.text.trim());
+                        },
+                        child: ValueListenableBuilder(
+                          valueListenable: isCodeSent,
+                          builder: (context, bool codeSent, child) {
+                            return Text(
+                              codeSent ? "Resend" : "Verify",
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  ValueListenableBuilder(
+                    valueListenable: isCodeSent,
+                    builder: (context, bool codeSent, child) {
+                      return codeSent
+                          ? Expanded(
+                              flex: 2,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 15.0),
+                                child: TextFieldInput(
+                                  hintText: 'Enter OTP',
+                                  textInputType:
+                                      const TextInputType.numberWithOptions(),
+                                  textEditingController: _otpController,
+                                  maxLength: 6,
+                                ),
+                              ),
+                            )
+                          : const SizedBox();
+                    },
+                  ),
+                ],
               ),
               const SizedBox(
                 height: 24,

@@ -17,12 +17,15 @@ void main() async {
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "AIzaSyCZ-xrXqD5D19Snauto-Fx_nLD7PLrBXGM",
-        appId: "1:585119731880:web:eca6e4b3c42a755cee329d",
-        messagingSenderId: "585119731880",
-        projectId: "instagram-clone-4cea4",
-        storageBucket: 'instagram-clone-4cea4.appspot.com'
-      ),
+          apiKey: "AIzaSyDuElWVCAs9aXl2qFbm4cAGPhMK_jVOQSk",
+          authDomain: "instagramclone-9461c.firebaseapp.com",
+          databaseURL:
+              "https://instagramclone-9461c-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "instagramclone-9461c",
+          storageBucket: "instagramclone-9461c.appspot.com",
+          messagingSenderId: "922084839257",
+          appId: "1:922084839257:web:e3c70f218d3efbf7b20648",
+          measurementId: "G-CXWGXJNRBH"),
     );
   } else {
     await Firebase.initializeApp();
@@ -37,11 +40,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider(),),
+        ChangeNotifierProvider(
+          create: (_) => UserProvider(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Instagram Clone',
+        title: 'Instagram',
         theme: ThemeData.dark().copyWith(
           scaffoldBackgroundColor: mobileBackgroundColor,
         ),

@@ -7,7 +7,6 @@ class CommentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       child: Row(
@@ -30,10 +29,16 @@ class CommentCard extends StatelessWidget {
                       children: [
                         TextSpan(
                           text: snap.data()['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold,)
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                         TextSpan(
                           text: ' ${snap.data()['text']}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
@@ -45,7 +50,9 @@ class CommentCard extends StatelessWidget {
                         snap.data()['datePublished'].toDate(),
                       ),
                       style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w400,),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   )
                 ],
