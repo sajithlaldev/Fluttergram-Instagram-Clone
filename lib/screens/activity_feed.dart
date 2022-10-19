@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:instagram_clone_flutter/screens/profile_screen.dart';
 
 class ActivityFeedPage extends StatefulWidget {
   const ActivityFeedPage({Key? key}) : super(key: key);
@@ -153,12 +154,23 @@ class ActivityFeedItem extends StatelessWidget {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(left: 20.0, right: 15.0),
-          child: CircleAvatar(
-            radius: 23.0,
-            backgroundImage: NetworkImage(
-                userProfileImg != null && userProfileImg!.isEmpty
-                    ? "https://bugreader.com/i/avatar.jpg"
-                    : userProfileImg!),
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ProfileScreen(
+                    uid: userId!,
+                  ),
+                ),
+              );
+            },
+            child: CircleAvatar(
+              radius: 20.0,
+              backgroundImage: NetworkImage(
+                  userProfileImg != null && userProfileImg!.isEmpty
+                      ? "https://bugreader.com/i/avatar.jpg"
+                      : userProfileImg!),
+            ),
           ),
         ),
         Expanded(
