@@ -9,7 +9,7 @@ class FireStoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<String> uploadPost(String description, Uint8List file, String uid,
-      String username, String profImage) async {
+      String username, String profImage, String? location) async {
     // asking uid here because we dont want to make extra calls to firebase auth when we can just get from our state management
     String res = "Some error occurred";
     try {
@@ -22,9 +22,10 @@ class FireStoreMethods {
         username: username,
         likes: [],
         postId: postId,
-        datePublished: DateTime.now(),
+        datePublished: Timestamp.now(),
         postUrl: photoUrl,
         profImage: profImage,
+        location: location,
       );
       _firestore.collection('posts').doc(postId).set(post.toJson());
       res = "success";
@@ -34,18 +35,39 @@ class FireStoreMethods {
     return res;
   }
 
-  Future<String> likePost(String postId, String uid, List likes) async {
+  Future<String> likePost(Post post, String uid, String username,
+      String photoUrl, List likes) async {
     String res = "Some error occurred";
     try {
       if (likes.contains(uid)) {
         // if the likes list contains the user uid, we need to remove it
-        _firestore.collection('posts').doc(postId).update({
+        _firestore.collection('posts').doc(post.postId).update({
           'likes': FieldValue.arrayRemove([uid])
         });
+        FirebaseFirestore.instance
+            .collection("insta_a_feed")
+            .doc(post.uid)
+            .collection("items")
+            .doc(post.postId)
+            .delete();
       } else {
         // else we need to add uid to the likes array
-        _firestore.collection('posts').doc(postId).update({
+        _firestore.collection('posts').doc(post.postId).update({
           'likes': FieldValue.arrayUnion([uid])
+        });
+        FirebaseFirestore.instance
+            .collection("insta_a_feed")
+            .doc(post.uid)
+            .collection("items")
+            .doc(post.postId)
+            .set({
+          "username": username,
+          "userId": uid,
+          "type": "like",
+          "userProfileImg": photoUrl,
+          "mediaUrl": post.postUrl,
+          "timestamp": DateTime.now(),
+          "postId": post.postId,
         });
       }
       res = 'success';
@@ -56,8 +78,8 @@ class FireStoreMethods {
   }
 
   // Post comment
-  Future<String> postComment(String postId, String text, String uid,
-      String name, String profilePic) async {
+  Future<String> postComment(String ownerId, String postId, String postMediaUrl,
+      String text, String uid, String name, String profilePic) async {
     String res = "Some error occurred";
     try {
       if (text.isNotEmpty) {
@@ -75,6 +97,22 @@ class FireStoreMethods {
           'text': text,
           'commentId': commentId,
           'datePublished': DateTime.now(),
+        });
+
+        //adds to postOwner's activity feed
+        _firestore
+            .collection("insta_a_feed")
+            .doc(ownerId)
+            .collection("items")
+            .add({
+          "username": name,
+          "userId": uid,
+          "type": "comment",
+          "userProfileImg": profilePic,
+          "commentData": text,
+          "timestamp": Timestamp.now(),
+          "postId": postId,
+          "mediaUrl": postMediaUrl,
         });
         res = 'success';
       } else {
@@ -99,14 +137,13 @@ class FireStoreMethods {
   }
 
   Future<void> followUser(
-    String uid,
-    String followId
-  ) async {
+      String uid, String followId, String username, String pic) async {
     try {
-      DocumentSnapshot snap = await _firestore.collection('users').doc(uid).get();
+      DocumentSnapshot snap =
+          await _firestore.collection('users').doc(uid).get();
       List following = (snap.data()! as dynamic)['following'];
 
-      if(following.contains(followId)) {
+      if (following.contains(followId)) {
         await _firestore.collection('users').doc(followId).update({
           'followers': FieldValue.arrayRemove([uid])
         });
@@ -114,6 +151,13 @@ class FireStoreMethods {
         await _firestore.collection('users').doc(uid).update({
           'following': FieldValue.arrayRemove([followId])
         });
+
+        FirebaseFirestore.instance
+            .collection("insta_a_feed")
+            .doc(followId)
+            .collection("items")
+            .doc(uid)
+            .delete();
       } else {
         await _firestore.collection('users').doc(followId).update({
           'followers': FieldValue.arrayUnion([uid])
@@ -122,9 +166,23 @@ class FireStoreMethods {
         await _firestore.collection('users').doc(uid).update({
           'following': FieldValue.arrayUnion([followId])
         });
-      }
 
-    } catch(e) {
+        //updates activity feed
+        FirebaseFirestore.instance
+            .collection("insta_a_feed")
+            .doc(followId)
+            .collection("items")
+            .doc(uid)
+            .set({
+          "ownerId": followId,
+          "username": username,
+          "userId": uid,
+          "type": "follow",
+          "userProfileImg": pic,
+          "timestamp": DateTime.now()
+        });
+      }
+    } catch (e) {
       print(e.toString());
     }
   }

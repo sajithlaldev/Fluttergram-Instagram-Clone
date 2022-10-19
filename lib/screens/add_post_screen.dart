@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_clone_flutter/providers/user_provider.dart';
 import 'package:instagram_clone_flutter/resources/firestore_methods.dart';
+import 'package:instagram_clone_flutter/screens/add_location_screen.dart';
 import 'package:instagram_clone_flutter/utils/colors.dart';
 import 'package:instagram_clone_flutter/utils/utils.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Uint8List? _file;
   bool isLoading = false;
   final TextEditingController _descriptionController = TextEditingController();
+
+  ValueNotifier<String?> location = ValueNotifier(null);
 
   _selectImage(BuildContext parentContext) async {
     return showDialog(
@@ -73,6 +76,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
         uid,
         username,
         profImage,
+        location.value,
       );
       if (res == "success") {
         setState(() {
@@ -163,11 +167,13 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   children: <Widget>[
                     CircleAvatar(
                       backgroundImage: NetworkImage(
-                        userProvider.getUser.photoUrl,
+                        userProvider.getUser.photoUrl.isEmpty
+                            ? "https://bugreader.com/i/avatar.jpg"
+                            : userProvider.getUser.photoUrl,
                       ),
                     ),
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.3,
+                      width: MediaQuery.of(context).size.width * 0.5,
                       child: TextField(
                         controller: _descriptionController,
                         decoration: const InputDecoration(
@@ -192,6 +198,80 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       ),
                     ),
                   ],
+                ),
+                const Divider(),
+                const SizedBox(
+                  height: 10,
+                ),
+                InkWell(
+                  onTap: () async {
+                    var res = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddLocationScreen(),
+                      ),
+                    );
+                    if (res != null) {
+                      location.value = res;
+                    }
+                  },
+                  child: ValueListenableBuilder(
+                      valueListenable: location,
+                      builder: (context, String? loc, child) {
+                        if (loc == null) {
+                          return Row(
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              const Text(
+                                "Add Location",
+                              ),
+                              const Spacer(),
+                              Icon(
+                                Icons.keyboard_arrow_right,
+                                color: Colors.grey[350],
+                                size: 20,
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                            ],
+                          );
+                        } else {
+                          return Row(
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.7,
+                                child: Text(
+                                  loc,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () {
+                                  location.value = null;
+                                },
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.grey[350],
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                            ],
+                          );
+                        }
+                      }),
+                ),
+                const SizedBox(
+                  height: 10,
                 ),
                 const Divider(),
               ],

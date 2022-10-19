@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone_flutter/models/post.dart';
 import 'package:instagram_clone_flutter/models/user.dart';
 import 'package:instagram_clone_flutter/providers/user_provider.dart';
 import 'package:instagram_clone_flutter/resources/firestore_methods.dart';
@@ -9,8 +10,8 @@ import 'package:instagram_clone_flutter/widgets/comment_card.dart';
 import 'package:provider/provider.dart';
 
 class CommentsScreen extends StatefulWidget {
-  final postId;
-  const CommentsScreen({Key? key, required this.postId}) : super(key: key);
+  final Post post;
+  const CommentsScreen({Key? key, required this.post}) : super(key: key);
 
   @override
   _CommentsScreenState createState() => _CommentsScreenState();
@@ -20,10 +21,13 @@ class _CommentsScreenState extends State<CommentsScreen> {
   final TextEditingController commentEditingController =
       TextEditingController();
 
-  void postComment(String uid, String name, String profilePic) async {
+  void postComment(
+      String ownerId, String uid, String name, String profilePic) async {
     try {
       String res = await FireStoreMethods().postComment(
-        widget.postId,
+        widget.post.uid,
+        widget.post.postId,
+        widget.post.postUrl,
         commentEditingController.text,
         uid,
         name,
@@ -59,7 +63,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('posts')
-            .doc(widget.postId)
+            .doc(widget.post.postId)
             .collection('comments')
             .snapshots(),
         builder: (context,
@@ -88,7 +92,9 @@ class _CommentsScreenState extends State<CommentsScreen> {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundImage: NetworkImage(user.photoUrl),
+                backgroundImage: NetworkImage(user.photoUrl.isNotEmpty
+                    ? user.photoUrl
+                    : "https://bugreader.com/i/avatar.jpg"),
                 radius: 18,
               ),
               Expanded(
@@ -105,6 +111,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
               ),
               InkWell(
                 onTap: () => postComment(
+                  widget.post.uid,
                   user.uid,
                   user.username,
                   user.photoUrl,

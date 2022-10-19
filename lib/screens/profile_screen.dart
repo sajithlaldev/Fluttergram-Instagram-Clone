@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone_flutter/resources/auth_methods.dart';
+import 'package:instagram_clone_flutter/models/user.dart' as userModel;
 import 'package:instagram_clone_flutter/resources/firestore_methods.dart';
 import 'package:instagram_clone_flutter/screens/login_screen.dart';
+import 'package:instagram_clone_flutter/screens/signup_screen.dart';
 import 'package:instagram_clone_flutter/utils/colors.dart';
 import 'package:instagram_clone_flutter/utils/utils.dart';
 import 'package:instagram_clone_flutter/widgets/follow_button.dart';
@@ -17,7 +18,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  var userData = {};
+  Map<String, dynamic> userData = {};
   int postLen = 0;
   int followers = 0;
   int following = 0;
@@ -37,7 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       var userSnap = await FirebaseFirestore.instance
           .collection('users')
-          .doc(widget.uid)
+          .doc(
+            widget.uid,
+          )
           .get();
 
       // get post lENGTH
@@ -90,7 +93,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           CircleAvatar(
                             backgroundColor: Colors.grey,
                             backgroundImage: NetworkImage(
-                              userData['photoUrl'],
+                              userData['photoUrl'] != null &&
+                                      userData['photoUrl'].toString().isNotEmpty
+                                  ? userData['photoUrl'].toString()
+                                  : "https://bugreader.com/i/avatar.jpg",
                             ),
                             radius: 40,
                           ),
@@ -114,22 +120,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   children: [
                                     FirebaseAuth.instance.currentUser!.uid ==
                                             widget.uid
-                                        ? FollowButton(
-                                            text: 'Sign Out',
-                                            backgroundColor:
-                                                mobileBackgroundColor,
-                                            textColor: primaryColor,
-                                            borderColor: Colors.grey,
-                                            function: () async {
-                                              await AuthMethods().signOut();
-                                              Navigator.of(context)
-                                                  .pushReplacement(
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const LoginScreen(),
-                                                ),
-                                              );
-                                            },
+                                        ? Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              FollowButton(
+                                                text: 'Edit Profile',
+                                                backgroundColor:
+                                                    Colors.blue[600]!,
+                                                textColor: primaryColor,
+                                                borderColor: Colors.grey,
+                                                function: () async {
+                                                  await Navigator.of(context)
+                                                      .push(
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          SignupScreen(
+                                                        user: userModel.User
+                                                            .fromMap(userData),
+                                                      ),
+                                                    ),
+                                                  );
+                                                  getData();
+                                                },
+                                              ),
+                                              FollowButton(
+                                                text: 'Sign Out',
+                                                backgroundColor:
+                                                    mobileBackgroundColor,
+                                                textColor: primaryColor,
+                                                borderColor: Colors.grey,
+                                                function: () async {
+                                                  await FirebaseAuth.instance
+                                                      .signOut();
+                                                  Navigator.of(context)
+                                                      .pushAndRemoveUntil(
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const LoginScreen(),
+                                                    ),
+                                                    (root) => false,
+                                                  );
+                                                },
+                                              )
+                                            ],
                                           )
                                         : isFollowing
                                             ? FollowButton(
@@ -140,10 +174,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 function: () async {
                                                   await FireStoreMethods()
                                                       .followUser(
-                                                    FirebaseAuth.instance
-                                                        .currentUser!.uid,
-                                                    userData['uid'],
-                                                  );
+                                                          FirebaseAuth.instance
+                                                              .currentUser!.uid,
+                                                          userData['uid'],
+                                                          userData['username'],
+                                                          userData['photoUrl']);
 
                                                   setState(() {
                                                     isFollowing = false;
@@ -162,6 +197,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     FirebaseAuth.instance
                                                         .currentUser!.uid,
                                                     userData['uid'],
+                                                    userData['username'],
+                                                    userData['photoUrl'],
                                                   );
 
                                                   setState(() {
@@ -184,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: Text(
                           userData['username'],
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),

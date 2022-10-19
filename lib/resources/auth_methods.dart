@@ -22,6 +22,7 @@ class AuthMethods {
 
   Future<String> signUpUser({
     required String email,
+    required String phone,
     required String password,
     required String username,
     required String bio,
@@ -47,6 +48,7 @@ class AuthMethods {
 
         model.User _user = model.User(
           username: username,
+          phone: phone,
           uid: cred.user!.uid,
           photoUrl: photoUrl,
           email: email,
@@ -60,6 +62,50 @@ class AuthMethods {
             .collection("users")
             .doc(cred.user!.uid)
             .set(_user.toJson());
+
+        res = "success";
+      } else {
+        res = "Please enter all the fields";
+      }
+    } catch (err) {
+      return err.toString();
+    }
+    return res;
+  }
+
+  Future<String> updateUser({
+    required String username,
+    required String bio,
+    Uint8List? file,
+  }) async {
+    String res = "Some error Occurred";
+    try {
+      if (username.isNotEmpty || bio.isNotEmpty || file != null) {
+        String photoUrl = file != null
+            ? await StorageMethods()
+                .uploadImageToStorage('profilePics', file, false)
+            : "";
+
+        Map<String, dynamic> data;
+
+        if (photoUrl.isEmpty) {
+          data = {
+            "username": username,
+            "bio": bio,
+          };
+        } else {
+          data = {
+            "username": username,
+            "bio": bio,
+            "photoUrl": photoUrl,
+          };
+        }
+
+        // adding user in our database
+        await _firestore
+            .collection("users")
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .update(data);
 
         res = "success";
       } else {

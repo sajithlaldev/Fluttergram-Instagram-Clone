@@ -13,7 +13,10 @@ class CommentCard extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundImage: NetworkImage(
-              snap.data()['profilePic'],
+              snap['profilePic'] != null &&
+                      snap['profilePic'].toString().isNotEmpty
+                  ? snap['profilePic'].toString()
+                  : "https://bugreader.com/i/avatar.jpg",
             ),
             radius: 18,
           ),
@@ -62,7 +65,7 @@ class CommentCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             child: const Icon(
-              Icons.favorite,
+              Icons.favorite_border,
               size: 16,
             ),
           )

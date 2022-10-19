@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_clone_flutter/models/post.dart';
 import 'package:instagram_clone_flutter/models/user.dart' as model;
 import 'package:instagram_clone_flutter/providers/user_provider.dart';
 import 'package:instagram_clone_flutter/resources/firestore_methods.dart';
@@ -11,8 +12,10 @@ import 'package:instagram_clone_flutter/widgets/like_animation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../screens/profile_screen.dart';
+
 class PostCard extends StatefulWidget {
-  final snap;
+  final Map<String, dynamic> snap;
   const PostCard({
     Key? key,
     required this.snap,
@@ -74,22 +77,35 @@ class _PostCardState extends State<PostCard> {
         color: mobileBackgroundColor,
       ),
       padding: const EdgeInsets.symmetric(
-        vertical: 10,
+        vertical: 8,
       ),
       child: Column(
         children: [
           // HEADER SECTION OF THE POST
           Container(
             padding: const EdgeInsets.symmetric(
-              vertical: 4,
-              horizontal: 16,
+              vertical: 10,
+              horizontal: 10,
             ).copyWith(right: 0),
             child: Row(
               children: <Widget>[
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage(
-                    widget.snap['profImage'].toString(),
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                          uid: widget.snap['uid'],
+                        ),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 12,
+                    backgroundImage: NetworkImage(
+                      widget.snap['profImage'].toString().isEmpty
+                          ? "https://bugreader.com/i/avatar.jpg"
+                          : widget.snap['profImage'].toString(),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -101,12 +117,35 @@ class _PostCardState extends State<PostCard> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
-                          widget.snap['username'].toString(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ProfileScreen(
+                                  uid: widget.snap['uid'],
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            widget.snap['username'].toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+                        if (widget.snap['location'] != null)
+                          const SizedBox(
+                            height: 3,
+                          ),
+                        if (widget.snap['location'] != null)
+                          Text(
+                            widget.snap['location'].toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 9,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -159,8 +198,10 @@ class _PostCardState extends State<PostCard> {
           GestureDetector(
             onDoubleTap: () {
               FireStoreMethods().likePost(
-                widget.snap['postId'].toString(),
+                Post.fromMap(widget.snap),
                 user.uid,
+                user.username,
+                user.photoUrl,
                 widget.snap['likes'],
               );
               setState(() {
@@ -217,8 +258,10 @@ class _PostCardState extends State<PostCard> {
                           Icons.favorite_border,
                         ),
                   onPressed: () => FireStoreMethods().likePost(
-                    widget.snap['postId'].toString(),
+                    Post.fromMap(widget.snap),
                     user.uid,
+                    user.username,
+                    user.photoUrl,
                     widget.snap['likes'],
                   ),
                 ),
@@ -230,7 +273,7 @@ class _PostCardState extends State<PostCard> {
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => CommentsScreen(
-                      postId: widget.snap['postId'].toString(),
+                      post: Post.fromMap(widget.snap),
                     ),
                   ),
                 ),
@@ -300,7 +343,7 @@ class _PostCardState extends State<PostCard> {
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => CommentsScreen(
-                        postId: widget.snap['postId'].toString(),
+                        post: Post.fromMap(widget.snap),
                       ),
                     ),
                   ),

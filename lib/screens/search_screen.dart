@@ -64,7 +64,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: NetworkImage(
-                            (snapshot.data! as dynamic).docs[index]['photoUrl'],
+                            (snapshot.data! as dynamic)
+                                    .docs[index]['photoUrl']
+                                    .toString()
+                                    .isNotEmpty
+                                ? (snapshot.data! as dynamic).docs[index]
+                                    ['photoUrl']
+                                : "https://bugreader.com/i/avatar.jpg",
                           ),
                           radius: 16,
                         ),
@@ -93,7 +99,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   crossAxisCount: 3,
                   itemCount: (snapshot.data! as dynamic).docs.length,
                   itemBuilder: (context, index) => Image.network(
-                    (snapshot.data! as dynamic).docs[index]['postUrl'],
+                    (snapshot.data! as dynamic)
+                            .docs[index]['postUrl']
+                            .toString()
+                            .isNotEmpty
+                        ? (snapshot.data! as dynamic).docs[index]['postUrl']
+                        : "https://bugreader.com/i/avatar.jpg",
                     fit: BoxFit.cover,
                   ),
                   staggeredTileBuilder: (index) => MediaQuery.of(context)
